@@ -32,7 +32,7 @@ public:
 
 		}
 		this->random();
-		/*this->print();*/
+		
 
 	}
 	void init()
@@ -80,12 +80,12 @@ public:
 			}
 			last--;
 			
-			//this->print();
+			
 
 		}
 		
 	}
-	void insertionSort()
+	void insertionSort(wchar_t* screen, HANDLE& hConsole, DWORD& dwBytesWritten)
 	{
 		count = 0;
 		for (int i = 1; i < no; i++)
@@ -94,7 +94,7 @@ public:
 			for (int j = i - 1; j > -1; j--)
 			{
 				count++;
-				//this->print();
+				
 
 				if (x[j] > x[j + 1])
 				{
@@ -102,6 +102,7 @@ public:
 					x[j] = x[j + 1];
 					x[j + 1] = temp;
 					k = j;
+					::print(this, screen, hConsole, dwBytesWritten);
 				}
 				else
 					break;
@@ -154,6 +155,12 @@ int main()
 	COORD coord = { nScreenWidth ,nScreenHeight };
 	SetConsoleScreenBufferSize(hConsole, coord);
 
+	// setting color 
+	WORD chattr = FOREGROUND_GREEN | FOREGROUND_INTENSITY | BACKGROUND_BLUE;
+
+	SetConsoleTextAttribute(hConsole, chattr);
+	
+	//Window Size
 	SMALL_RECT windowSize = { 0, 0, nScreenWidth - 1, nScreenHeight - 1 };
 	SetConsoleWindowInfo(hConsole, TRUE, &windowSize);
 	
@@ -167,21 +174,19 @@ int main()
 	DWORD dwBytesWritten = 0;
 
 	Sort sort(nScreenHeight);
-	auto tp1 = chrono::system_clock::now();
-	auto tp2 = chrono::system_clock::now();
-
-	while (!(GetAsyncKeyState((unsigned short)'A') & 0x8000))
-	{
-		tp2 = chrono::system_clock::now();
-		chrono::duration<float> elapsedTime = tp2 - tp1;
-		tp1 = tp2;
-		float fElapsedTime = elapsedTime.count();
-		::print(&sort, screen,hConsole,dwBytesWritten);
-		sort.BubbleSort(screen,hConsole,dwBytesWritten);
-
 	
-		
-	}
+
+		::print(&sort, screen,hConsole,dwBytesWritten); //prints in screen by swapping buffers
+
+		sort.BubbleSort(screen,hConsole,dwBytesWritten); // Bubble sorting algo
+
+		sort.random(); // Randomizing the integers
+
+		::print(&sort, screen, hConsole, dwBytesWritten); 
+
+		sort.insertionSort(screen, hConsole, dwBytesWritten);
+		Sleep(1000);
+
 
 	return 0;
 }
@@ -196,15 +201,30 @@ void print(Sort* sort, wchar_t *screen,HANDLE& hConsole,DWORD& dwBytesWritten)
 			// Each Row
 			if (x < sort->x[y])
 			{
-				screen[y*nScreenWidth + x] = '_';
+				/* jUST to show a better movement in sorting*/
+				if(sort->x[y]%5==0)
+				screen[y*nScreenWidth + x] = '-';
+				else if (sort->x[y]%5 == 1)
+				screen[y*nScreenWidth + x] = ';';
+				else if (sort->x[y] % 5 == 2)
+					screen[y*nScreenWidth + x] = '{';
+				else if (sort->x[y] % 5 == 3)
+					screen[y*nScreenWidth + x] = '|';
+				else if (sort->x[y] % 5 == 4)
+					screen[y*nScreenWidth + x] = ':';
+				else
+				{
+				screen[y*nScreenWidth + x] = '@';
+				}
 			}
 			else
 				screen[y*nScreenWidth + x] = ' ';
 	
 		}
 	}
-	Sleep(50);
+	Sleep(100);
 	screen[nScreenWidth * nScreenHeight - 1] = '\0';
+
 	WriteConsoleOutputCharacter(hConsole, screen, nScreenWidth * nScreenHeight, { 0,0 }, &dwBytesWritten);	// Display Frame
 
 	
